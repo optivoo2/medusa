@@ -36,3 +36,4 @@ dist/**
 .cursorignore
 **/.medusa# Generated Production Secrets
 production-secrets.txt
+.vercel
