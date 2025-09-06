@@ -72,7 +72,10 @@
     "release:next": "chgstangeset publish --no-git-tags --snapshot --tag next",
     "version:next": "changeset version --snapshot next",
     "release": "changeset publish",
-    "version": "changeset version && yarn install --no-immutable"
+    "version": "changeset version && yarn install --no-immutable",
+    "deploy:production": "npx medusa db:migrate && npm start",
+    "deploy:railway": "npm run deploy:production",
+    "generate:secrets": "node -e \"console.log('JWT_SECRET=' + require('crypto').randomBytes(32).toString('hex')); console.log('COOKIE_SECRET=' + require('crypto').randomBytes(32).toString('hex'))\""
   },
   "dependencies": {
     "@changesets/changelog-github": "^0.4.8",
