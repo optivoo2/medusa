@@ -1,0 +1,95 @@
+# 🚀 Medusa E-commerce Stack - Docker Compose
+version: '3.8'
+
+services:
+  # Medusa Backend API
+  medusa-backend:
+    build: .
+    container_name: medusa-backend
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - STORE_NAME=${STORE_NAME:-Medusa Store}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - REDIS_URL=${REDIS_URL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET=${S3_BUCKET}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    volumes:
+      - medusa-uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - redis
+    networks:
+      - medusa-network
+
+  # Next.js Storefront
+  medusa-storefront:
+    build:
+      context: ./my-storefront
+      dockerfile: Dockerfile
+    container_name: medusa-storefront
+    ports:
+      - "${STOREFRONT_PORT:-8000}:8000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://medusa-backend:3000
+      - NEXT_PUBLIC_BASE_URL=${STOREFRONT_URL}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+    restart: unless-stopped
+    depends_on:
+      - medusa-backend
+    networks:
+      - medusa-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: medusa-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-medusa123}
+    networks:
+      - medusa-network
+
+  # PostgreSQL Database (optional - use if not using external DB)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: medusa-postgres
+  #   environment:
+  #     - POSTGRES_DB=${POSTGRES_DB:-medusa}
+  #     - POSTGRES_USER=${POSTGRES_USER:-medusa}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-medusa123}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "${POSTGRES_PORT:-5432}:5432"
+  #   restart: unless-stopped
+  #   networks:
+  #     - medusa-network
+
+volumes:
+  medusa-uploads:
+  redis-data:
+  # postgres-data:
+
+networks:
+  medusa-network:
+    driver: bridge

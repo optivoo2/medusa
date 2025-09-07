@@ -1,0 +1,199 @@
+# 🌊 Coolify Configuration for Medusa E-commerce Platform
+# This file helps Coolify automatically detect and deploy your application
+
+version: "1.0"
+
+# Project metadata
+project:
+  name: "Medusa E-commerce Platform"
+  description: "Production-ready e-commerce platform with admin dashboard and storefront"
+
+# Services configuration
+services:
+  # Backend API Service
+  backend:
+    name: "medusa-backend"
+    type: "nodejs"
+    buildCommand: "yarn install --frozen-lockfile && yarn build"
+    startCommand: "node app.js"
+    port: 3000
+    healthCheckPath: "/health"
+    
+    # Environment requirements
+    environment:
+      NODE_ENV: "production"
+      PORT: "3000"
+      # Required secrets (set in Coolify dashboard)
+      JWT_SECRET: "${JWT_SECRET}"
+      COOKIE_SECRET: "${COOKIE_SECRET}"
+      DATABASE_URL: "${DATABASE_URL}"
+      
+      # Store configuration
+      STORE_NAME: "${STORE_NAME:-Medusa Store}"
+      CORS_ORIGIN: "${CORS_ORIGIN}"
+      
+      # Optional services
+      REDIS_URL: "${REDIS_URL}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      S3_BUCKET: "${S3_BUCKET}"
+      SENDGRID_API_KEY: "${SENDGRID_API_KEY}"
+      STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY}"
+
+    # Resource limits
+    resources:
+      memory: "1024M"
+      cpu: "1.0"
+
+    # Auto-scaling configuration
+    scaling:
+      min: 1
+      max: 3
+      targetCpu: 70
+
+  # Frontend Storefront Service  
+  frontend:
+    name: "medusa-storefront"
+    type: "nextjs"
+    buildPath: "./my-storefront"
+    buildCommand: "yarn install --frozen-lockfile && yarn build"
+    port: 8000
+    
+    # Environment configuration
+    environment:
+      NODE_ENV: "production"
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: "https://${BACKEND_DOMAIN}"
+      NEXT_PUBLIC_BASE_URL: "https://${FRONTEND_DOMAIN}"
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "${STRIPE_PUBLISHABLE_KEY}"
+
+    # Resource limits
+    resources:
+      memory: "512M"
+      cpu: "0.5"
+
+# Domain configuration
+domains:
+  backend:
+    - pattern: "api.${DOMAIN}"
+      service: "backend"
+      ssl: true
+  frontend:
+    - pattern: "${DOMAIN}"
+      service: "frontend"
+      ssl: true
+    - pattern: "www.${DOMAIN}"
+      service: "frontend"
+      ssl: true
+      redirect: "${DOMAIN}"
+
+# Database configuration (if using built-in PostgreSQL)
+databases:
+  postgres:
+    name: "medusa-db"
+    version: "15"
+    # Only enable if not using external database
+    enabled: false
+
+# Redis configuration (optional but recommended)
+redis:
+  name: "medusa-redis"
+  version: "7"
+  enabled: true
+  persistence: true
+
+# Deployment configuration
+deployment:
+  # Auto-deploy on git push
+  autoDeployment: true
+  
+  # Branch to deploy from
+  branch: "production"
+  
+  # Build optimization
+  buildOptimization: true
+  
+  # Health checks
+  healthCheck:
+    enabled: true
+    path: "/health"
+    interval: 30
+    timeout: 10
+    retries: 3
+
+# Monitoring and logging
+monitoring:
+  # Enable application monitoring
+  enabled: true
+  
+  # Log retention (days)
+  logRetention: 30
+  
+  # Metrics collection
+  metrics: true
+
+# Backup configuration
+backup:
+  # Enable automatic backups
+  enabled: true
+  
+  # Backup frequency
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  
+  # Retention period
+  retention: "30d"
+
+# Security configuration
+security:
+  # Force HTTPS
+  forceSSL: true
+  
+  # Security headers
+  headers:
+    - "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload"
+    - "X-Content-Type-Options: nosniff"
+    - "X-Frame-Options: DENY"
+    - "X-XSS-Protection: 1; mode=block"
+
+# Build optimization
+build:
+  # Cache node_modules
+  cache:
+    - "node_modules"
+    - ".yarn/cache"
+    - "my-storefront/node_modules"
+    - "my-storefront/.next/cache"
+  
+  # Build timeout (minutes)
+  timeout: 20
+  
+  # Parallel builds
+  parallel: true
+
+# Environment variables template
+# Copy these to your Coolify dashboard environment configuration
+environmentTemplate:
+  # CRITICAL - REQUIRED FOR DEPLOYMENT
+  NODE_ENV: "production"
+  JWT_SECRET: "your_generated_jwt_secret_64_chars"
+  COOKIE_SECRET: "your_generated_cookie_secret_64_chars"
+  DATABASE_URL: "postgresql://user:pass@host:5432/db"
+  
+  # STORE CONFIGURATION
+  STORE_NAME: "Your Amazing Store"
+  CORS_ORIGIN: "https://yourdomain.com,https://www.yourdomain.com"
+  
+  # OPTIONAL - PERFORMANCE OPTIMIZATION
+  REDIS_URL: "redis://redis-host:6379"
+  
+  # OPTIONAL - FILE STORAGE
+  AWS_ACCESS_KEY_ID: "your_aws_access_key"
+  AWS_SECRET_ACCESS_KEY: "your_aws_secret_key"
+  S3_BUCKET: "your-medusa-bucket"
+  
+  # OPTIONAL - EMAIL NOTIFICATIONS
+  SENDGRID_API_KEY: "your_sendgrid_api_key"
+  SENDGRID_FROM_EMAIL: "noreply@yourdomain.com"
+  
+  # OPTIONAL - PAYMENT PROCESSING
+  STRIPE_SECRET_KEY: "sk_live_your_stripe_secret"
+  STRIPE_PUBLISHABLE_KEY: "pk_live_your_stripe_publishable"

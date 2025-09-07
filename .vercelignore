@@ -20,6 +20,29 @@ my-storefront/*.log
 my-storefront/*.tmp
 my-storefront/*.temp
 
+# Exclude entire packages directory (monorepo packages)
+packages/
+integration-tests/
+www/
+docs-util/
+scripts/
+.github/
+.changeset/
+.yarn/
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Exclude development and build artifacts
+*.tsbuildinfo
+*.d.ts.map
+*.js.map
+.turbo/
+.cache/
+.parcel-cache/
+.webpack/
+.rollup.cache/
+
 # Exclude development files
 .env.local
 .env.development

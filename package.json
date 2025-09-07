@@ -73,9 +73,17 @@
     "version:next": "changeset version --snapshot next",
     "release": "changeset publish",
     "version": "changeset version && yarn install --no-immutable",
-    "deploy:production": "npx medusa db:migrate && npm start",
+    "deploy:production": "npx medusa db:migrate && node app.js",
     "deploy:railway": "npm run deploy:production",
-    "generate:secrets": "node -e \"console.log('JWT_SECRET=' + require('crypto').randomBytes(32).toString('hex')); console.log('COOKIE_SECRET=' + require('crypto').randomBytes(32).toString('hex'))\""
+    "generate:secrets": "node -e \"const crypto = require('crypto'); console.log('JWT_SECRET=' + crypto.randomBytes(64).toString('hex')); console.log('COOKIE_SECRET=' + crypto.randomBytes(64).toString('hex')); console.log('SESSION_SECRET=' + crypto.randomBytes(64).toString('hex')); console.log('ADMIN_JWT_SECRET=' + crypto.randomBytes(64).toString('hex'));\"",
+    "security:check": "node scripts/security-check.js",
+    "setup:production": "./scripts/setup-production-env.sh",
+    "prestart": "npm run security:check",
+    "start:dev": "NODE_ENV=development node dev-server.js",
+    "start:prod": "NODE_ENV=production node app.js",
+    "build:prod": "NODE_ENV=production yarn build",
+    "deploy:vercel": "vercel --prod",
+    "deploy:check": "npm run security:check && echo '✅ Ready for deployment'"
   },
   "dependencies": {
     "@changesets/changelog-github": "^0.4.8",
