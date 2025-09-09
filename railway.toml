@@ -1,9 +1,9 @@
 [build]
 builder = "dockerfile"
-dockerfile = "Dockerfile.test"
+dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "node server-test.js"
+startCommand = "node app.js"
 restartPolicyType = "on-failure"
 restartPolicyMaxRetries = 3
 
