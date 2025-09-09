@@ -1,32 +1,30 @@
 [build]
 builder = "dockerfile"
+dockerfile = "Dockerfile"
 
 [deploy]
 startCommand = "npm run deploy:production"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
-restartPolicyType = "on_failure"
+restartPolicyType = "on-failure"
 restartPolicyMaxRetries = 3
 
-# Enhanced deployment settings
-[deploy.healthcheck]
+[environments.production.variables]
+# Railway will automatically set these, but we can document them here
+# DATABASE_URL = "provided by Railway postgres service"
+# REDIS_URL = "provided by Railway redis service" 
+# JWT_SECRET = "provided by Railway"
+# COOKIE_SECRET = "provided by Railway"
+
+NODE_ENV = "production"
+PORT = "9000"
+SKIP_ENV_VALIDATION = "1"
+
+[environments.production.build]
+# Optimize build settings for production
+buildCommand = "yarn build"
+
+[health]
+# Configure health check path
 path = "/health"
 interval = 30
 timeout = 10
 retries = 3
-
-# Resource configuration
-[deploy.resources]
-memory = "2GB"
-cpu = "2 vCPU"
-
-# Environment configuration
-[env]
-NODE_ENV = "production"
-NODE_OPTIONS = "--max-old-space-size=4096"
-TZ = "UTC"
-
-# Security headers
-[env.security]
-HELMET_ENABLED = "true"
-RATE_LIMIT_ENABLED = "true"

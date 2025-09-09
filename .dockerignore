@@ -39,10 +39,8 @@ yarn-error.log*
 *.swp
 *.swo
 
-# Docker
-Dockerfile*
+# Docker compose files (keep Dockerfile available)
 docker-compose*.yml
-.dockerignore
 
 # Documentation
 README.md

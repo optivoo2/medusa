@@ -1,8 +1,8 @@
 # Use official Node.js runtime as base image
 FROM node:18-alpine
 
-# Install system dependencies needed for building
-RUN apk add --no-cache python3 make g++
+# Install system dependencies needed for building and health checks
+RUN apk add --no-cache python3 make g++ curl
 
 # Enable Corepack for Yarn v3 support
 RUN corepack enable
@@ -15,16 +15,17 @@ COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
 
 # Install all dependencies (including dev dependencies for building)
-RUN yarn install
+RUN yarn install --immutable
 
-# Add both global and local node_modules/.bin to PATH
-ENV PATH="/usr/local/lib/node_modules/.bin:/app/node_modules/.bin:$PATH"
+# Add node_modules/.bin to PATH for build tools
+ENV PATH="/app/node_modules/.bin:$PATH"
 
 # Copy source code
 COPY . .
 
-# Fix TypeScript config template variables for all packages
-RUN find . -name "tsconfig.json" -exec sed -i 's/\${configDir}/./g' {} \;
+# Set environment variables for build
+ENV NODE_ENV=development
+ENV SKIP_ENV_VALIDATION=1
 
 # Build the application (with all dev dependencies available)
 RUN yarn build
@@ -32,11 +33,21 @@ RUN yarn build
 # Clean up dev dependencies to reduce final image size
 RUN yarn install --production --ignore-scripts --prefer-offline
 
+# Create a non-root user for security
+RUN addgroup -g 1001 -S nodejs && adduser -S medusa -u 1001
+RUN chown -R medusa:nodejs /app
+USER medusa
+
 # Expose port
 EXPOSE 9000
 
-# Define environment variable
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:9000/health || exit 1
+
+# Define environment variables
 ENV NODE_ENV=production
+ENV PORT=9000
 
 # Run database migrations and start the application
 CMD ["npm", "run", "deploy:production"]

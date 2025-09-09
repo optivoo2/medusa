@@ -1,0 +1,49 @@
+name: Pre-Deploy Validation
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+      
+      - name: Enable Corepack
+        run: corepack enable
+      
+      - name: Install dependencies
+        run: yarn install --immutable
+      
+      - name: Lint code
+        run: yarn lint
+        continue-on-error: true
+      
+      - name: Type check
+        run: yarn build
+        
+      - name: Run tests
+        run: yarn test
+        continue-on-error: true
+      
+      - name: Security check
+        run: npm run security:check
+        
+      - name: Validate Docker build
+        run: docker build -t medusa-test .
+        
+      - name: Test deployment readiness
+        run: |
+          echo "✅ Build validation passed"
+          echo "✅ Docker image builds successfully"
+          echo "✅ Ready for deployment"

@@ -89,7 +89,8 @@
     "start:prod": "NODE_ENV=production node app.js",
     "build:prod": "NODE_ENV=production yarn build",
     "deploy:vercel": "vercel --prod",
-    "deploy:check": "npm run security:check && echo '✅ Ready for deployment'"
+    "deploy:check": "npm run security:check && echo '✅ Ready for deployment'",
+    "pre-deploy": "./scripts/pre-deploy-check.sh"
   },
   "dependencies": {
     "@changesets/changelog-github": "^0.4.8",
