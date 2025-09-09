@@ -17,9 +17,6 @@ COPY .yarn ./.yarn
 # Install all dependencies (including dev dependencies for building)
 RUN yarn install
 
-# Install TypeScript and build tools globally for each package build
-RUN npm install -g typescript tsup rimraf
-
 # Add node_modules/.bin to PATH for build tools
 ENV PATH="/app/node_modules/.bin:$PATH"
 
@@ -29,11 +26,11 @@ COPY . .
 # Fix TypeScript config template variables for all packages
 RUN find . -name "tsconfig.json" -exec sed -i 's/\${configDir}/./g' {} \;
 
-# Build the application with fixed configurations
-RUN NODE_ENV=production yarn build
+# Build the application (with all dev dependencies available)
+RUN yarn build
 
-# Clean up dev dependencies to reduce image size
-RUN yarn install --production --ignore-scripts
+# Clean up dev dependencies to reduce final image size
+RUN yarn install --production --ignore-scripts --prefer-offline
 
 # Expose port
 EXPOSE 9000
