@@ -104,6 +104,7 @@ export type RemoteQueryFunction = {
     queryConfig: TConfig,
     options?: RemoteJoinerOptions
   ): Promise<any>
+  
   /**
    * Query wrapper to provide specific API's and pre processing around remoteQuery.query
    * @param query
@@ -156,6 +157,7 @@ export interface Query {
     queryConfig: TConfig,
     options?: RemoteJoinerOptions
   ): Promise<any>
+  
   /**
    * Query wrapper to provide specific API's and pre processing around remoteQuery.query
    * @param query
