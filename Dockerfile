@@ -17,10 +17,13 @@ COPY .yarn ./.yarn
 # Install all dependencies (including dev dependencies for building)
 RUN yarn install
 
+# Add node_modules/.bin to PATH for build tools
+ENV PATH="/app/node_modules/.bin:$PATH"
+
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application with explicit PATH
 RUN yarn build
 
 # Clean up dev dependencies to reduce image size
