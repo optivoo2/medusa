@@ -84,7 +84,7 @@ export type QueryIndexFunction = {
   ? NarrowRemoteFunctionReturnType<TConfig>
   : never*/
 
-export type RemoteQueryFunction = {
+export interface RemoteQueryFunction {
   /**
    * Query wrapper to provide specific API's and pre processing around remoteQuery.query
    * @param queryConfig
