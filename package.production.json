@@ -1,0 +1,53 @@
+{
+  "name": "medusa-store-production",
+  "version": "1.0.0",
+  "description": "Medusa e-commerce store - Production Runtime",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "start:prod": "NODE_ENV=production node app.js"
+  },
+  "dependencies": {
+    "@medusajs/modules-sdk": "^2.10.1",
+    "@medusajs/medusa": "^2.10.1",
+    "@medusajs/auth": "^2.10.1",
+    "@medusajs/user": "^2.10.1",
+    "@medusajs/cache-inmemory": "^2.10.1",
+    "@medusajs/workflow-engine-inmemory": "^2.10.1",
+    "@medusajs/stock-location": "^2.10.1",
+    "@medusajs/inventory": "^2.10.1",
+    "@medusajs/file-local": "^2.10.1",
+    "@medusajs/product": "^2.10.1",
+    "@medusajs/pricing": "^2.10.1",
+    "@medusajs/promotion": "^2.10.1",
+    "@medusajs/region": "^2.10.1",
+    "@medusajs/customer": "^2.10.1",
+    "@medusajs/sales-channel": "^2.10.1",
+    "@medusajs/cart": "^2.10.1",
+    "@medusajs/api-key": "^2.10.1",
+    "@medusajs/store": "^2.10.1",
+    "@medusajs/tax": "^2.10.1",
+    "@medusajs/currency": "^2.10.1",
+    "@medusajs/order": "^2.10.1",
+    "@medusajs/payment": "^2.10.1",
+    "@medusajs/fulfillment-manual": "^2.10.1",
+    "@medusajs/notification-local": "^2.10.1",
+    "@medusajs/event-bus-local": "^2.10.1",
+    "@medusajs/link-modules": "^2.10.1",
+    "@medusajs/utils": "^2.10.1",
+    "@medusajs/framework": "^2.10.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "awilix": "^8.0.0",
+    "mikro-orm": "^6.0.0",
+    "@mikro-orm/core": "^6.0.0",
+    "@mikro-orm/knex": "^6.0.0",
+    "@mikro-orm/migrations": "^6.0.0",
+    "@mikro-orm/postgresql": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

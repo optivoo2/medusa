@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: medusa-postgres-prod
+    environment:
+      - POSTGRES_DB=medusa_prod
+      - POSTGRES_USER=medusa_user
+      - POSTGRES_PASSWORD=medusa_secure_password_2024
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - medusa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa_user -d medusa_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache for Performance
+  redis:
+    image: redis:7-alpine
+    container_name: medusa-redis-prod
+    restart: unless-stopped
+    networks:
+      - medusa-network
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Medusa Backend - Optimized Runtime Only
+  medusa-backend:
+    image: node:20-alpine
+    container_name: medusa-backend-prod
+    working_dir: /app
+    command: >
+      sh -c "
+        set -e &&
+        echo '🚀 Starting Medusa Production Server...' &&
+        echo '📦 Installing minimal runtime dependencies...' &&
+        apk add --no-cache curl dumb-init &&
+        echo '🔧 Installing only production dependencies...' &&
+        npm install --production --silent &&
+        echo '✅ Dependencies ready!' &&
+        echo '🌟 Starting Medusa application...' &&
+        dumb-init node app.js
+      "
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://medusa_user:medusa_secure_password_2024@postgres:5432/medusa_prod
+      - JWT_SECRET=f4c77d50ff365e593f7ac9591345273a8e0f6a10532bda1beeec6f1eca9aa534641ea246ef106b7f51e16c0a131384e0a8373350410b6fcd6744b582423c935c
+      - COOKIE_SECRET=0a8b0c9cb09e0abe6980330ba0b8ef3d16a2eb9218fe9cbdfdd922f837bcb5ff1efd5b54f649f158819cab3dafd7ab158c34ac271a29c7a57552b6ff108b5ddc
+      - ADMIN_JWT_SECRET=761177a343f94d6c436005126dab72c001bc29f2c87484e712082af38e660adda85b59f5ae6de72a97b6e5b4ac68b6f3d4f4d30a0b30c9f0a0e5b0e5b0e5b0e5b0e
+      - STORE_CORS_ORIGIN=https://store.optivoo.com,http://localhost:3000
+      - ADMIN_CORS_ORIGIN=https://store.optivoo.com,http://localhost:3000
+      - REDIS_URL=redis://redis:6379
+      # Local storage settings
+      - STORAGE_TYPE=local
+      - LOCAL_STORAGE_PATH=/app/uploads
+      - EMAIL_PROVIDER=local
+      # Production optimizations
+      - NODE_OPTIONS=--max-old-space-size=2048
+      # Medusa v2 feature flag
+      - MEDUSA_FF_MEDUSA_V2=true
+    volumes:
+      # Only mount essential files, not the entire monorepo
+      - ./app.js:/app/app.js:ro
+      - ./medusa-config.js:/app/medusa-config.js:ro
+      - ./package.production.json:/app/package.json:ro
+      # Runtime volumes
+      - medusa-uploads:/app/uploads
+      - medusa-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - medusa-network
+      - traefik-net
+    ports:
+      - "3001:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-net
+      # Main store domain
+      - traefik.http.routers.medusa-store.rule=Host(`store.optivoo.com`)
+      - traefik.http.routers.medusa-store.entrypoints=websecure
+      - traefik.http.routers.medusa-store.tls.certresolver=letsencrypt
+      - traefik.http.services.medusa-store.loadbalancer.server.port=3000
+      # HTTP redirect
+      - traefik.http.routers.medusa-store-http.rule=Host(`store.optivoo.com`)
+      - traefik.http.routers.medusa-store-http.entrypoints=web
+      - traefik.http.routers.medusa-store-http.middlewares=https-redirect@docker
+      # Health check endpoint
+      - traefik.http.routers.medusa-health.rule=Host(`store.optivoo.com`) && Path(`/health`)
+      - traefik.http.routers.medusa-health.entrypoints=websecure
+      - traefik.http.routers.medusa-health.tls.certresolver=letsencrypt
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  medusa-uploads:
+    driver: local
+  medusa-logs:
+    driver: local
+
+networks:
+  medusa-network:
+    driver: bridge
+  traefik-net:
+    external: true

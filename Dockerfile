@@ -26,8 +26,11 @@ ENV PATH="/app/node_modules/.bin:$PATH"
 # Copy source code
 COPY . .
 
-# Build the application with global tools available
-RUN yarn build
+# Fix TypeScript config template variables for all packages
+RUN find . -name "tsconfig.json" -exec sed -i 's/\${configDir}/./g' {} \;
+
+# Build the application with fixed configurations
+RUN NODE_ENV=production yarn build
 
 # Clean up dev dependencies to reduce image size
 RUN yarn install --production --ignore-scripts
