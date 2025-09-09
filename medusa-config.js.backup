@@ -108,6 +108,36 @@ module.exports = {
     // CRITICAL FIX: Production-ready file storage
     [Modules.FILE]: {
       resolve: "@medusajs/file",
+      options: {
+        providers: isProduction ? [
+          // S3 for production (configure AWS credentials in environment)
+          {
+            resolve: "@medusajs/file-s3",
+            id: "s3",
+            options: {
+              file_url: process.env.S3_FILE_URL,
+              access_key_id: process.env.AWS_ACCESS_KEY_ID,
+              secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
+              region: process.env.AWS_REGION || "us-east-1",
+              bucket: process.env.S3_BUCKET,
+              prefix: process.env.S3_PREFIX || "medusa",
+              // Enable multipart uploads for large files
+              upload_options: {
+                ACL: "public-read",
+              },
+            },
+          },
+        ] : [
+          // Local storage for development
+          {
+            resolve: "@medusajs/file-local",
+            id: "local",
+            options: {
+              upload_dir: "uploads",
+            },
+          },
+        ],
+      },
     },
     [Modules.PRODUCT]: true,
     [Modules.PRICING]: true,
@@ -133,11 +163,42 @@ module.exports = {
       },
     },
     [Modules.FULFILLMENT]: {
-      resolve: "@medusajs/fulfillment",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/fulfillment-manual",
+            id: "manual",
+          },
+        ],
+      },
     },
     // Enhanced notification system
     [Modules.NOTIFICATION]: {
       resolve: "@medusajs/notification",
+      options: {
+        providers: isProduction ? [
+          // SendGrid for production emails
+          {
+            resolve: "@medusajs/notification-sendgrid",
+            id: "sendgrid",
+            options: {
+              api_key: process.env.SENDGRID_API_KEY,
+              from: process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com",
+              template_path: "templates",
+            },
+          },
+        ] : [
+          // Local notifications for development
+          {
+            resolve: "@medusajs/notification-local",
+            id: "local-notification-provider",
+            options: {
+              name: "Local Notification Provider",
+              channels: ["log", "email"],
+            },
+          },
+        ],
+      },
     },
     // Add event bus configuration for better performance
     [Modules.EVENT_BUS]: isProduction && REDIS_URL ? {

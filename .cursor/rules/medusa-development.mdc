@@ -1,0 +1,223 @@
+---
+description: Medusa-specific development guidelines and best practices
+---
+
+# Medusa Development Guidelines
+
+This rule provides specific guidance for developing with Medusa v2, including module development, API patterns, and commerce-specific best practices.
+
+## Module Development
+
+### Creating New Modules
+When creating new commerce modules:
+
+1. **Module Structure**: Follow the pattern in `/packages/modules/`
+2. **Module Registration**: Add to [medusa-config.js](mdc:medusa-config.js) under `modules` section
+3. **Dependencies**: Use `@medusajs/utils` for common utilities
+4. **Database**: Use Medusa's database abstraction layer
+5. **Events**: Emit events for important state changes
+
+### Module Configuration
+```typescript
+// Example module configuration
+[Modules.YOUR_MODULE]: {
+  resolve: "@medusajs/your-module",
+  options: {
+    // Module-specific options
+  },
+}
+```
+
+### Module Dependencies
+- **Core Dependencies**: Use `@medusajs/core` for base functionality
+- **Database**: Use `@medusajs/database` for data persistence
+- **Events**: Use `@medusajs/event-bus` for event handling
+- **Workflows**: Use `@medusajs/workflows-sdk` for complex business logic
+
+## API Development
+
+### Route Patterns
+- **RESTful Design**: Follow REST conventions for API endpoints
+- **Versioning**: Use `/v1/`, `/v2/` prefixes for API versions
+- **Authentication**: Use Medusa's built-in authentication system
+- **Authorization**: Implement proper role-based access control
+
+### Request/Response Patterns
+```typescript
+// API route example
+app.get("/admin/products", async (req, res) => {
+  try {
+    const products = await productModule.listProducts({
+      // Query parameters
+    })
+    res.json({ products })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+```
+
+### Error Handling
+- Use Medusa's error classes: `MedusaError`, `ValidationError`
+- Return appropriate HTTP status codes
+- Provide meaningful error messages
+- Log errors for debugging
+
+## Database Patterns
+
+### Entity Definitions
+```typescript
+// Entity definition example
+@Entity("product")
+export class Product {
+  @PrimaryColumn()
+  id: string
+
+  @Column()
+  title: string
+
+  @CreateDateColumn()
+  created_at: Date
+
+  @UpdateDateColumn()
+  updated_at: Date
+}
+```
+
+### Repository Patterns
+- Use Medusa's repository pattern for data access
+- Implement proper indexing for performance
+- Use transactions for multi-entity operations
+- Handle database migrations properly
+
+## Workflow Development
+
+### Workflow Definition
+```typescript
+// Workflow example
+export const createProductWorkflow = createWorkflow(
+  "create-product",
+  function (input: CreateProductInput) {
+    const product = createProductStep(input)
+    const inventory = createInventoryItemStep(product)
+    return { product, inventory }
+  }
+)
+```
+
+### Step Implementation
+- Keep steps atomic and focused
+- Handle errors gracefully
+- Use compensation steps for rollbacks
+- Implement proper logging
+
+## Event Handling
+
+### Event Emission
+```typescript
+// Emit events for important state changes
+await eventBusService.emit("product.created", {
+  product_id: product.id,
+  // Additional context
+})
+```
+
+### Event Listeners
+- Use event listeners for cross-module communication
+- Implement idempotent event handlers
+- Handle event failures gracefully
+- Use event sourcing for audit trails
+
+## Configuration Management
+
+### Environment-Based Configuration
+- Use environment variables for configuration
+- Provide sensible defaults for development
+- Validate required configuration in production
+- Use the configuration validation in [medusa-config.js](mdc:medusa-config.js)
+
+### Module Configuration
+- Make modules configurable through options
+- Support different providers (Redis, S3, etc.)
+- Handle configuration changes gracefully
+- Document configuration options
+
+## Testing Patterns
+
+### Unit Tests
+- Test individual functions and methods
+- Mock external dependencies
+- Use Medusa's test utilities from `@medusajs/test-utils`
+- Test error conditions and edge cases
+
+### Integration Tests
+- Test module interactions
+- Use test databases
+- Test API endpoints
+- Test workflow execution
+
+### Test Data
+- Use factories for test data creation
+- Clean up test data after tests
+- Use consistent test data across tests
+- Mock external services
+
+## Performance Considerations
+
+### Database Optimization
+- Use proper indexing
+- Implement pagination for large datasets
+- Use database transactions efficiently
+- Monitor query performance
+
+### Caching Strategy
+- Use Redis for caching in production
+- Implement cache invalidation
+- Use appropriate TTL values
+- Cache frequently accessed data
+
+### API Performance
+- Implement rate limiting
+- Use compression for responses
+- Optimize database queries
+- Use connection pooling
+
+## Security Best Practices
+
+### Authentication & Authorization
+- Use JWT tokens for authentication
+- Implement proper session management
+- Use role-based access control
+- Validate all inputs
+
+### Data Protection
+- Encrypt sensitive data
+- Use HTTPS in production
+- Implement CORS properly
+- Sanitize user inputs
+
+### API Security
+- Implement rate limiting
+- Use API keys for external access
+- Validate request payloads
+- Log security events
+
+## Deployment Considerations
+
+### Environment Configuration
+- Use different configurations for different environments
+- Validate environment variables
+- Use secrets management
+- Monitor application health
+
+### Database Migrations
+- Use proper migration strategies
+- Test migrations in staging
+- Backup before migrations
+- Rollback plans for failed migrations
+
+### Monitoring & Logging
+- Implement comprehensive logging
+- Use structured logging
+- Monitor application metrics
+- Set up alerting for critical issues

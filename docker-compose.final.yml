@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  medusa-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - node:20-alpine
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: medusa-store:production
+    container_name: medusa-production
+    ports:
+      - "3001:3000"  # External:Internal
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+    env_file:
+      - .env.production
+    volumes:
+      # Only mount necessary directories for uploads and logs
+      - medusa-uploads:/app/uploads
+      - medusa-logs:/app/logs
+      # Mount corrected configuration file
+      - ./medusa-config.js:/app/medusa-config.js:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {r.statusCode === 200 ? process.exit(0) : process.exit(1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - traefik-net
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2'
+        reservations:
+          memory: 2G
+          cpus: '1'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+      
+      # Main store domain (API + Admin + Store)
+      - "traefik.http.routers.medusa-store.rule=Host(`store.optivoo.com`)"
+      - "traefik.http.routers.medusa-store.entrypoints=websecure"
+      - "traefik.http.routers.medusa-store.tls.certresolver=letsencrypt"
+      - "traefik.http.services.medusa-store.loadbalancer.server.port=3000"
+      
+      # HTTP redirect to HTTPS
+      - "traefik.http.routers.medusa-store-http.rule=Host(`store.optivoo.com`)"
+      - "traefik.http.routers.medusa-store-http.entrypoints=web"
+      - "traefik.http.routers.medusa-store-http.middlewares=redirect-to-https"
+      
+      # Security headers for production
+      - "traefik.http.middlewares.medusa-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.medusa-headers.headers.customrequestheaders.X-Forwarded-For={{.ClientIP}}"
+      - "traefik.http.routers.medusa-store.middlewares=medusa-headers"
+      
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis for production caching and workflows
+  redis:
+    image: redis:7-alpine
+    container_name: medusa-redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - medusa-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  medusa-uploads:
+    name: medusa-uploads
+  medusa-logs:
+    name: medusa-logs
+  redis-data:
+    name: medusa-redis-data
+
+networks:
+  traefik-net:
+    external: true
+  medusa-network:
+    driver: bridge

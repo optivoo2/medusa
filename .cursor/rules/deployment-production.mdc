@@ -1,0 +1,239 @@
+---
+description: Deployment and production configuration guidelines
+---
+
+# Deployment & Production Guidelines
+
+This rule covers deployment strategies, production configuration, and operational best practices for the Medusa ecommerce platform.
+
+## Production Configuration
+
+### Environment Variables
+The [medusa-config.js](mdc:medusa-config.js) file includes production validation for critical environment variables:
+
+**Required Variables:**
+- `JWT_SECRET` - Authentication token signing
+- `COOKIE_SECRET` - Session cookie encryption
+- `DATABASE_URL` - PostgreSQL connection string
+
+**Recommended Variables:**
+- `REDIS_URL` - Redis for caching and workflows
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` - S3 file storage
+- `SENDGRID_API_KEY` - Email notifications
+- `S3_BUCKET`, `S3_PREFIX` - File storage configuration
+
+### Security Configuration
+- **HTTPS**: Always use HTTPS in production
+- **CORS**: Configure proper CORS origins
+- **Secrets**: Never commit secrets to version control
+- **Database SSL**: Use SSL connections to database
+- **Trust Proxy**: Configure for reverse proxy setups
+
+## Deployment Platforms
+
+### Vercel Deployment
+- Configuration: [vercel.json](mdc:vercel.json)
+- Environment setup: [setup-vercel-env.sh](mdc:setup-vercel-env.sh)
+- Build analysis: [VERCEL_BUILD_ANALYSIS.md](mdc:VERCEL_BUILD_ANALYSIS.md)
+
+### Railway Deployment
+- Configuration: [railway.toml](mdc:railway.toml)
+- Production script: `yarn deploy:railway`
+
+### Docker Deployment
+- Dockerfile: [Dockerfile](mdc:Dockerfile)
+- Docker Compose: [docker-compose.yml](mdc:docker-compose.yml)
+
+### Coolify Deployment
+- Configuration: [coolify.yml](mdc:coolify.yml)
+
+## Build & Deployment Scripts
+
+### Available Scripts
+```bash
+# Production deployment
+yarn deploy:production
+
+# Security check before deployment
+yarn security:check
+
+# Generate secrets for production
+yarn generate:secrets
+
+# Setup production environment
+yarn setup:production
+
+# Build for production
+yarn build:prod
+
+# Start production server
+yarn start:prod
+```
+
+### Pre-deployment Checklist
+1. Run security check: `yarn security:check`
+2. Validate environment variables
+3. Run tests: `yarn test`
+4. Build application: `yarn build:prod`
+5. Check database migrations
+6. Verify external service connections
+
+## Database Management
+
+### Migration Strategy
+- Use Medusa's built-in migration system
+- Test migrations in staging environment
+- Backup database before migrations
+- Plan rollback procedures
+
+### Production Database Setup
+```bash
+# Run migrations
+npx medusa db:migrate
+
+# Seed initial data (if needed)
+npx medusa db:seed
+```
+
+### Connection Pooling
+The configuration includes production-optimized database settings:
+- Min connections: 2
+- Max connections: 10
+- Connection timeouts: 30 seconds
+- SSL enabled for security
+
+## Caching Strategy
+
+### Redis Configuration
+- **Development**: In-memory caching
+- **Production**: Redis with 1-hour TTL
+- **Workflow Engine**: Redis for distributed workflows
+- **Event Bus**: Redis for event distribution
+
+### Cache Invalidation
+- Implement proper cache invalidation
+- Use cache tags for related data
+- Monitor cache hit rates
+- Set appropriate TTL values
+
+## File Storage
+
+### S3 Configuration
+- **Production**: AWS S3 with public read access
+- **Development**: Local file storage
+- **Multipart Uploads**: Enabled for large files
+- **CDN Integration**: Configure for performance
+
+### File Upload Security
+- Validate file types and sizes
+- Scan for malware
+- Use signed URLs for private files
+- Implement proper access controls
+
+## Monitoring & Logging
+
+### Application Monitoring
+- Monitor application health
+- Track performance metrics
+- Set up alerting for critical issues
+- Monitor database performance
+
+### Logging Strategy
+- Use structured logging
+- Log security events
+- Monitor error rates
+- Track user activities
+
+### Health Checks
+- Implement health check endpoints
+- Monitor external service dependencies
+- Check database connectivity
+- Verify file storage access
+
+## Performance Optimization
+
+### Database Optimization
+- Use proper indexing
+- Monitor slow queries
+- Implement connection pooling
+- Use read replicas if needed
+
+### API Performance
+- Implement response compression
+- Use HTTP/2
+- Optimize database queries
+- Implement proper pagination
+
+### Caching
+- Cache frequently accessed data
+- Use CDN for static assets
+- Implement browser caching
+- Use Redis for session storage
+
+## Security Best Practices
+
+### Authentication
+- Use strong JWT secrets
+- Implement proper session management
+- Use secure cookie settings
+- Implement rate limiting
+
+### Data Protection
+- Encrypt sensitive data
+- Use HTTPS everywhere
+- Implement proper CORS
+- Sanitize user inputs
+
+### API Security
+- Validate all inputs
+- Use API keys for external access
+- Implement proper authorization
+- Log security events
+
+## Backup & Recovery
+
+### Database Backups
+- Regular automated backups
+- Test backup restoration
+- Store backups securely
+- Document recovery procedures
+
+### File Backups
+- Backup uploaded files
+- Use versioning for important files
+- Test file recovery
+- Monitor backup success
+
+## Scaling Considerations
+
+### Horizontal Scaling
+- Use load balancers
+- Implement session sharing
+- Use external Redis for sessions
+- Scale database connections
+
+### Vertical Scaling
+- Monitor resource usage
+- Optimize memory usage
+- Use connection pooling
+- Monitor CPU usage
+
+## Troubleshooting
+
+### Common Issues
+- Database connection failures
+- Redis connectivity issues
+- File upload problems
+- Authentication errors
+
+### Debugging Tools
+- Application logs
+- Database query logs
+- Redis monitoring
+- Performance profiling
+
+### Recovery Procedures
+- Database rollback procedures
+- Service restart procedures
+- Cache clearing procedures
+- File system recovery

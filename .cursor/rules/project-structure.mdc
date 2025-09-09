@@ -1,0 +1,75 @@
+---
+alwaysApply: true
+description: Medusa project structure and architecture guide
+---
+
+# Medusa Project Structure Guide
+
+This is a Medusa v2 ecommerce platform with a modular architecture. Understanding the project structure is crucial for effective development.
+
+## Core Architecture
+
+- **Main Entry Point**: [app.js](mdc:app.js) - Production server entry point
+- **Development Server**: [dev-server.js](mdc:dev-server.js) - Development server with hot reload
+- **Configuration**: [medusa-config.js](mdc:medusa-config.js) - Main Medusa configuration with environment-based settings
+- **Package Management**: [package.json](mdc:package.json) - Root package.json with workspace configuration
+
+## Key Directories
+
+### `/packages/` - Monorepo Packages
+- `medusa/` - Core Medusa framework
+- `admin/` - Admin dashboard and related packages
+- `design-system/` - UI components and design system
+- `modules/` - Commerce modules (product, order, cart, etc.)
+- `core/` - Core utilities and SDKs
+- `cli/` - Command-line tools and utilities
+
+### `/api/` - API Implementation
+- [api/index.js](mdc:api/index.js) - API server entry point
+- [api/medusa.js](mdc:api/medusa.js) - Medusa instance configuration
+
+### `/integration-tests/` - Integration Tests
+- Comprehensive test suites for all modules
+- API endpoint testing
+- End-to-end workflow testing
+
+## Module System
+
+Medusa v2 uses a modular architecture where each commerce primitive is a separate module:
+- **Product Module**: Product catalog management
+- **Order Module**: Order processing and fulfillment
+- **Cart Module**: Shopping cart functionality
+- **Payment Module**: Payment processing
+- **Inventory Module**: Stock management
+- **Customer Module**: Customer management
+- **Pricing Module**: Dynamic pricing
+- **Promotion Module**: Discounts and promotions
+
+## Configuration Patterns
+
+The [medusa-config.js](mdc:medusa-config.js) file uses environment-based configuration:
+- Development: Local services, in-memory caching
+- Production: External services (Redis, S3, SendGrid), enhanced security
+
+## Build System
+
+- **Turbo**: Monorepo build orchestration via [turbo.json](mdc:turbo.json)
+- **Yarn Workspaces**: Package management and dependency resolution
+- **TypeScript**: Strict typing across all packages
+- **ESLint**: Code quality and consistency via [.eslintrc.js](mdc:.eslintrc.js)
+
+## Development Workflow
+
+1. **Development**: `yarn start:dev` - Starts development server
+2. **Testing**: `yarn test` - Runs all tests
+3. **Building**: `yarn build` - Builds all packages
+4. **Linting**: `yarn lint` - Runs ESLint across codebase
+
+## Environment Variables
+
+Critical environment variables for production:
+- `JWT_SECRET`, `COOKIE_SECRET` - Authentication secrets
+- `DATABASE_URL` - PostgreSQL connection
+- `REDIS_URL` - Redis for caching and workflows
+- `AWS_*` - S3 file storage configuration
+- `SENDGRID_API_KEY` - Email notifications

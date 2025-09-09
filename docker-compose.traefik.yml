@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  medusa-store:
+    image: node:20-alpine
+    container_name: medusa-store-production
+    working_dir: /app
+    command: sh -c "corepack enable && corepack prepare yarn@3.2.1 --activate && yarn install && yarn build && node app.js"
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://neondb_owner:npg_zpjwXBPl96Si@ep-winter-shape-acyx74fh-pooler.sa-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require
+      - JWT_SECRET=e591042185958efa5eb3b42609061dc260d39bf0fa85a1b7f0d109bb752cc3aec05396ef708507a82020297827880b5ba5cc7dad4b878bcaebf8582ba52015d2
+      - COOKIE_SECRET=2f785bdc4ec227e9d5bedf829cbd58de835330031970fc84ddeb139838f12c36e31ace1e618625cda641c3f6c34410f795a9c20ddae1041037824901444bd4fe
+      - ADMIN_JWT_SECRET=41547da730b3f90e79f00d7a3deea4fa453a4bd30ccd5c88c6c7e56372fc547232158b3ce6166b50a96c6f11f6d4fbd2eb091d6c5cfffb86b312bda920622010
+      - STORE_CORS_ORIGIN=https://store.optivoo.com
+      - ADMIN_CORS_ORIGIN=https://admin.store.optivoo.com
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+      # Main store domain
+      - "traefik.http.routers.medusa-store.rule=Host(`store.optivoo.com`)"
+      - "traefik.http.routers.medusa-store.entrypoints=websecure"
+      - "traefik.http.routers.medusa-store.tls.certresolver=letsencrypt"
+      - "traefik.http.services.medusa-store.loadbalancer.server.port=3000"
+      # HTTP redirect
+      - "traefik.http.routers.medusa-store-http.rule=Host(`store.optivoo.com`)"
+      - "traefik.http.routers.medusa-store-http.entrypoints=web"
+      - "traefik.http.routers.medusa-store-http.middlewares=redirect-to-https@file"
+
+
+networks:
+  traefik-net:
+    external: true

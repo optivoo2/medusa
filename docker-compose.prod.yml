@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Medusa Backend API
+  medusa-backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: medusa-backend-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+    env_file:
+      - .env
+    volumes:
+      - medusa-uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - medusa-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.medusa-api.rule=Host(`store.optivoo.com`)"
+      - "traefik.http.routers.medusa-api.entrypoints=websecure"
+      - "traefik.http.routers.medusa-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.medusa-api.loadbalancer.server.port=3000"
+
+  # Traefik reverse proxy for SSL termination
+  traefik:
+    image: traefik:v2.10
+    container_name: medusa-traefik
+    command:
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@optivoo.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+    networks:
+      - medusa-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`admin.optivoo.com`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+
+volumes:
+  medusa-uploads:
+  traefik-letsencrypt:
+
+networks:
+  medusa-network:
+    driver: bridge

@@ -1,0 +1,323 @@
+---
+description: Monorepo workspace management and development workflow
+---
+
+# Workspace Management & Development Workflow
+
+This rule covers the monorepo structure, workspace management, and development workflow for the Medusa project using Yarn workspaces and Turbo.
+
+## Monorepo Structure
+
+### Workspace Configuration
+The project uses Yarn workspaces defined in [package.json](mdc:package.json):
+
+```json
+{
+  "workspaces": {
+    "packages": [
+      "packages/medusa",
+      "packages/medusa-test-utils",
+      "packages/modules/*",
+      "packages/modules/providers/*",
+      "packages/plugins/*",
+      "packages/core/*",
+      "packages/framework/*",
+      "packages/cli/*",
+      "packages/cli/oas/*",
+      "packages/*",
+      "packages/admin/*",
+      "packages/design-system/*",
+      "packages/generated/*",
+      "integration-tests/**/*"
+    ]
+  }
+}
+```
+
+### Package Categories
+
+#### Core Packages (`/packages/core/`)
+- **orchestration**: Workflow orchestration
+- **workflows-sdk**: Workflow development SDK
+- **modules-sdk**: Module development SDK
+- **js-sdk**: JavaScript SDK
+- **types**: Shared TypeScript types
+- **utils**: Common utilities
+- **medusa-test-utils**: Testing utilities
+
+#### Commerce Modules (`/packages/modules/`)
+- **product**: Product catalog management
+- **order**: Order processing
+- **cart**: Shopping cart functionality
+- **payment**: Payment processing
+- **inventory**: Stock management
+- **customer**: Customer management
+- **pricing**: Dynamic pricing
+- **promotion**: Discounts and promotions
+- **region**: Regional settings
+- **sales-channel**: Sales channel management
+- **store**: Store configuration
+- **tax**: Tax calculation
+- **currency**: Currency management
+- **api-key**: API key management
+- **auth**: Authentication
+- **user**: User management
+- **file**: File storage
+- **notification**: Notification system
+- **event-bus**: Event handling
+- **cache**: Caching system
+- **workflow-engine**: Workflow execution
+
+#### Admin Packages (`/packages/admin/`)
+- **dashboard**: Admin dashboard UI
+- **admin-sdk**: Admin SDK
+- **admin-shared**: Shared admin utilities
+- **admin-bundler**: Admin build system
+- **admin-vite-plugin**: Vite plugin for admin
+
+#### Design System (`/packages/design-system/`)
+- **ui**: UI components
+- **icons**: Icon components
+- **ui-preset**: UI presets
+- **toolbox**: Design tools
+
+#### CLI Tools (`/packages/cli/`)
+- **create-medusa-app**: App creation tool
+- **medusa-cli**: Main CLI tool
+- **oas**: OpenAPI specification tools
+
+## Build System
+
+### Turbo Configuration
+The build system uses Turbo for monorepo orchestration via [turbo.json](mdc:turbo.json):
+
+```json
+{
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["!node_modules/**", "!src/**", "*/**"]
+    },
+    "test": {
+      "outputs": []
+    },
+    "test:integration": {
+      "outputs": []
+    }
+  }
+}
+```
+
+### Build Commands
+```bash
+# Build all packages
+yarn build
+
+# Build specific package
+yarn build --filter=package-name
+
+# Build with dependencies
+yarn build --filter=package-name...
+
+# Build with concurrency control
+yarn build --concurrency=50%
+```
+
+## Development Workflow
+
+### Package Development
+1. **Create New Package**: Add to workspace configuration
+2. **Install Dependencies**: Use `yarn add` from root
+3. **Build Package**: Use Turbo build system
+4. **Test Package**: Use Jest test runner
+5. **Publish Package**: Use changesets for versioning
+
+### Cross-Package Dependencies
+```bash
+# Add dependency to specific package
+yarn workspace @medusajs/product add lodash
+
+# Add internal dependency
+yarn workspace @medusajs/product add @medusajs/utils
+
+# Add dev dependency
+yarn workspace @medusajs/product add -D jest
+```
+
+### Package Scripts
+Each package can have its own scripts in `package.json`:
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:integration": "jest --config jest.integration.config.js",
+    "lint": "eslint src/",
+    "type-check": "tsc --noEmit"
+  }
+}
+```
+
+## Version Management
+
+### Changesets
+The project uses Changesets for version management:
+- **Configuration**: `.changeset/` directory
+- **Version Command**: `yarn version`
+- **Release Command**: `yarn release`
+- **Snapshot Releases**: `yarn release:snapshot`
+
+### Versioning Strategy
+- **Semantic Versioning**: Major.Minor.Patch
+- **Breaking Changes**: Major version bump
+- **New Features**: Minor version bump
+- **Bug Fixes**: Patch version bump
+
+## Testing Strategy
+
+### Test Organization
+- **Unit Tests**: `test/` or `__tests__/` directories
+- **Integration Tests**: `integration-tests/` directory
+- **Test Utils**: `@medusajs/test-utils` package
+
+### Test Commands
+```bash
+# Run all tests
+yarn test
+
+# Run tests for specific package
+yarn test --filter=package-name
+
+# Run integration tests
+yarn test:integration
+
+# Run tests in chunks
+yarn test:chunk
+```
+
+## Linting & Code Quality
+
+### ESLint Configuration
+- **Root Config**: [.eslintrc.js](mdc:.eslintrc.js)
+- **Package-Specific**: Override in package `.eslintrc.js`
+- **Pre-commit**: `lint-staged` for staged files
+
+### Linting Commands
+```bash
+# Lint all packages
+yarn lint
+
+# Lint specific path
+yarn lint:path packages/product/src/
+
+# Fix linting issues
+yarn lint --fix
+```
+
+## Package Publishing
+
+### Publishing Workflow
+1. **Create Changeset**: Document changes
+2. **Version Packages**: Update version numbers
+3. **Build Packages**: Ensure all packages build
+4. **Test Packages**: Run full test suite
+5. **Publish Packages**: Release to npm
+
+### Package Configuration
+```json
+{
+  "name": "@medusajs/product",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist/"],
+  "publishConfig": {
+    "access": "public"
+  }
+}
+```
+
+## Development Tools
+
+### Package Manager
+- **Yarn 3.2.1**: Package manager with workspaces
+- **Plug'n'Play**: Zero-install for faster CI
+- **Resolutions**: Dependency version overrides
+
+### Build Tools
+- **TypeScript**: Type checking and compilation
+- **Turbo**: Monorepo build orchestration
+- **Microbundle**: Library bundling
+- **Jest**: Testing framework
+
+### Development Scripts
+```bash
+# Start development server
+yarn start:dev
+
+# Start production server
+yarn start:prod
+
+# Generate secrets
+yarn generate:secrets
+
+# Security check
+yarn security:check
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+- **Build Matrix**: Test multiple Node.js versions
+- **Package Testing**: Test each package independently
+- **Integration Testing**: Full application testing
+- **Publishing**: Automated package publishing
+
+### Build Optimization
+- **Parallel Builds**: Use Turbo's parallel execution
+- **Caching**: Cache build artifacts
+- **Incremental Builds**: Only build changed packages
+- **Dependency Graph**: Optimize build order
+
+## Troubleshooting
+
+### Common Issues
+- **Dependency Conflicts**: Use resolutions in root package.json
+- **Build Failures**: Check package dependencies
+- **Test Failures**: Verify test database setup
+- **Publishing Issues**: Check package.json configuration
+
+### Debug Commands
+```bash
+# Check workspace dependencies
+yarn workspaces info
+
+# List all packages
+yarn workspaces list
+
+# Check package dependencies
+yarn why package-name
+
+# Clean all node_modules
+yarn clean
+```
+
+## Best Practices
+
+### Package Organization
+- Keep packages focused and cohesive
+- Minimize cross-package dependencies
+- Use proper TypeScript types
+- Document package APIs
+
+### Development Workflow
+- Use feature branches for development
+- Run tests before committing
+- Use conventional commits
+- Keep packages up to date
+
+### Performance
+- Use parallel builds when possible
+- Cache build artifacts
+- Optimize package dependencies
+- Monitor build times

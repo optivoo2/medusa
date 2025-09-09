@@ -5,7 +5,7 @@ async function bootstrap() {
     console.log("Starting Medusa server...")
     
     const { app, shutdown } = await MedusaApp({
-      medusaConfigPath: "/home/arthur/medusa/medusa-config.js",
+      medusaConfigPath: "/app/medusa-config.js",
     })
 
     // Add health check endpoint

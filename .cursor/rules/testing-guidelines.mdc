@@ -1,0 +1,394 @@
+---
+globs: *.test.js,*.test.ts,*.spec.js,*.spec.ts,**/test/**,**/tests/**
+description: Testing guidelines and patterns for Medusa project
+---
+
+# Testing Guidelines & Patterns
+
+This rule provides comprehensive testing guidelines for the Medusa ecommerce platform, covering unit tests, integration tests, and testing best practices.
+
+## Testing Framework
+
+### Jest Configuration
+- **Main Config**: [jest.config.js](mdc:jest.config.js)
+- **Base Config**: [_tsconfig.base.json](mdc:_tsconfig.base.json)
+- **Test Utils**: `@medusajs/test-utils` package
+- **TypeScript Support**: `ts-jest` for TypeScript testing
+
+### Test Structure
+```
+packages/
+├── module-name/
+│   ├── src/
+│   ├── test/
+│   │   ├── unit/
+│   │   ├── integration/
+│   │   └── fixtures/
+│   └── package.json
+```
+
+## Test Types
+
+### Unit Tests
+- **Location**: `test/unit/` or `__tests__/`
+- **Scope**: Individual functions, methods, classes
+- **Dependencies**: Mock external dependencies
+- **Naming**: `*.test.ts` or `*.spec.ts`
+
+### Integration Tests
+- **Location**: `test/integration/` or `integration-tests/`
+- **Scope**: Module interactions, API endpoints
+- **Dependencies**: Real database, mocked external services
+- **Naming**: `*.integration.test.ts`
+
+### End-to-End Tests
+- **Location**: `integration-tests/`
+- **Scope**: Complete user workflows
+- **Dependencies**: Full application stack
+- **Tools**: Playwright, Cypress, or similar
+
+## Test Commands
+
+### Available Scripts
+```bash
+# Run all tests
+yarn test
+
+# Run tests for specific package
+yarn test --filter=package-name
+
+# Run integration tests
+yarn test:integration
+
+# Run tests in chunks (for CI)
+yarn test:chunk
+
+# Run specific test suites
+yarn test:integration:packages:fast
+yarn test:integration:packages:slow
+yarn test:integration:api
+yarn test:integration:http
+yarn test:integration:modules
+```
+
+## Testing Patterns
+
+### Unit Test Example
+```typescript
+import { createProductService } from "../src/services/product"
+
+describe("ProductService", () => {
+  let productService: ProductService
+
+  beforeEach(() => {
+    productService = createProductService({
+      // Mock dependencies
+    })
+  })
+
+  it("should create a product", async () => {
+    const productData = {
+      title: "Test Product",
+      // ... other fields
+    }
+
+    const product = await productService.create(productData)
+
+    expect(product).toBeDefined()
+    expect(product.title).toBe(productData.title)
+  })
+
+  it("should handle validation errors", async () => {
+    const invalidData = {
+      // Missing required fields
+    }
+
+    await expect(productService.create(invalidData))
+      .rejects.toThrow("Validation error")
+  })
+})
+```
+
+### Integration Test Example
+```typescript
+import { createMedusaContainer } from "@medusajs/test-utils"
+import { ProductModule } from "@medusajs/product"
+
+describe("Product Integration", () => {
+  let container: MedusaContainer
+  let productModule: ProductModule
+
+  beforeAll(async () => {
+    container = await createMedusaContainer({
+      modules: [ProductModule],
+    })
+    productModule = container.resolve("productModule")
+  })
+
+  afterAll(async () => {
+    await container.shutdown()
+  })
+
+  it("should create and retrieve products", async () => {
+    const product = await productModule.createProducts({
+      title: "Integration Test Product",
+    })
+
+    const retrieved = await productModule.retrieveProduct(product.id)
+    expect(retrieved.title).toBe("Integration Test Product")
+  })
+})
+```
+
+## Test Utilities
+
+### Medusa Test Utils
+```typescript
+import {
+  createMedusaContainer,
+  createTestDatabase,
+  createTestRedis,
+  createTestEventBus,
+} from "@medusajs/test-utils"
+
+// Create test container with modules
+const container = await createMedusaContainer({
+  modules: [ProductModule, OrderModule],
+})
+
+// Create test database
+const db = await createTestDatabase()
+
+// Create test Redis instance
+const redis = await createTestRedis()
+```
+
+### Mock Patterns
+```typescript
+// Mock external services
+jest.mock("@medusajs/payment-stripe", () => ({
+  StripeProvider: jest.fn().mockImplementation(() => ({
+    createPayment: jest.fn().mockResolvedValue({ id: "pi_test" }),
+  })),
+}))
+
+// Mock database operations
+const mockRepository = {
+  find: jest.fn(),
+  save: jest.fn(),
+  remove: jest.fn(),
+}
+```
+
+## Test Data Management
+
+### Fixtures
+```typescript
+// test/fixtures/product.fixtures.ts
+export const productFixtures = {
+  validProduct: {
+    title: "Test Product",
+    description: "Test Description",
+    // ... other fields
+  },
+  invalidProduct: {
+    // Missing required fields
+  },
+}
+```
+
+### Test Database
+- Use separate test database
+- Clean up data between tests
+- Use transactions for isolation
+- Seed test data as needed
+
+### Factory Patterns
+```typescript
+// test/factories/product.factory.ts
+export class ProductFactory {
+  static create(overrides = {}) {
+    return {
+      title: "Factory Product",
+      description: "Factory Description",
+      ...overrides,
+    }
+  }
+
+  static createMany(count: number, overrides = {}) {
+    return Array.from({ length: count }, () => this.create(overrides))
+  }
+}
+```
+
+## API Testing
+
+### HTTP Endpoint Testing
+```typescript
+import request from "supertest"
+import { createApp } from "../src/app"
+
+describe("Product API", () => {
+  let app: Express
+
+  beforeAll(async () => {
+    app = await createApp()
+  })
+
+  it("should create product via API", async () => {
+    const response = await request(app)
+      .post("/admin/products")
+      .send({
+        title: "API Test Product",
+      })
+      .expect(201)
+
+    expect(response.body.product).toBeDefined()
+    expect(response.body.product.title).toBe("API Test Product")
+  })
+
+  it("should handle validation errors", async () => {
+    await request(app)
+      .post("/admin/products")
+      .send({}) // Empty payload
+      .expect(400)
+  })
+})
+```
+
+### Authentication Testing
+```typescript
+// Test authenticated endpoints
+const authHeaders = {
+  Authorization: `Bearer ${testJwtToken}`,
+}
+
+await request(app)
+  .get("/admin/products")
+  .set(authHeaders)
+  .expect(200)
+```
+
+## Workflow Testing
+
+### Workflow Execution Testing
+```typescript
+import { createProductWorkflow } from "../src/workflows/create-product"
+
+describe("Create Product Workflow", () => {
+  it("should execute workflow successfully", async () => {
+    const workflow = createProductWorkflow(container)
+    
+    const result = await workflow.run({
+      title: "Workflow Test Product",
+    })
+
+    expect(result.product).toBeDefined()
+    expect(result.inventory).toBeDefined()
+  })
+
+  it("should handle workflow failures", async () => {
+    const workflow = createProductWorkflow(container)
+    
+    await expect(workflow.run({
+      // Invalid input
+    })).rejects.toThrow()
+  })
+})
+```
+
+## Performance Testing
+
+### Load Testing
+```typescript
+// Test performance under load
+describe("Performance Tests", () => {
+  it("should handle concurrent product creation", async () => {
+    const promises = Array.from({ length: 100 }, () =>
+      productService.create({
+        title: `Concurrent Product ${Math.random()}`,
+      })
+    )
+
+    const results = await Promise.all(promises)
+    expect(results).toHaveLength(100)
+  })
+})
+```
+
+## Test Coverage
+
+### Coverage Requirements
+- **Unit Tests**: 80%+ coverage
+- **Integration Tests**: Critical paths covered
+- **API Tests**: All endpoints tested
+- **Error Cases**: Exception handling tested
+
+### Coverage Commands
+```bash
+# Generate coverage report
+yarn test --coverage
+
+# Coverage for specific package
+yarn test --coverage --filter=package-name
+```
+
+## CI/CD Testing
+
+### Test Pipeline
+- **Lint**: Code quality checks
+- **Unit Tests**: Fast feedback
+- **Integration Tests**: Comprehensive testing
+- **E2E Tests**: Full workflow validation
+
+### Test Chunking
+```bash
+# Run tests in chunks for CI
+yarn test:chunk
+```
+
+## Best Practices
+
+### Test Organization
+- Group related tests in describe blocks
+- Use descriptive test names
+- Keep tests focused and atomic
+- Avoid test interdependencies
+
+### Test Data
+- Use factories for test data creation
+- Clean up test data after tests
+- Use consistent test data
+- Mock external dependencies
+
+### Assertions
+- Use specific assertions
+- Test both success and failure cases
+- Verify side effects
+- Check error messages
+
+### Performance
+- Keep tests fast
+- Use parallel execution
+- Mock slow operations
+- Optimize test database setup
+
+## Debugging Tests
+
+### Test Debugging
+```typescript
+// Use console.log for debugging
+console.log("Debug info:", debugData)
+
+// Use debugger for step-through debugging
+debugger
+
+// Use Jest's verbose mode
+yarn test --verbose
+```
+
+### Common Issues
+- Database connection issues
+- Mock configuration problems
+- Async/await handling
+- Test isolation failures

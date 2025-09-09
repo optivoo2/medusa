@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  medusa-store:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - node:20-alpine
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: medusa-store:production
+    container_name: medusa-store-production
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - STORE_CORS_ORIGIN=https://store.optivoo.com
+      - ADMIN_CORS_ORIGIN=https://admin.store.optivoo.com
+    volumes:
+      # Only mount necessary directories, not the entire project
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - traefik-net
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+      # Main store domain
+      - "traefik.http.routers.medusa-store.rule=Host(`store.optivoo.com`)"
+      - "traefik.http.routers.medusa-store.entrypoints=websecure"
+      - "traefik.http.routers.medusa-store.tls.certresolver=letsencrypt"
+      - "traefik.http.services.medusa-store.loadbalancer.server.port=3000"
+      # HTTP redirect
+      - "traefik.http.routers.medusa-store-http.rule=Host(`store.optivoo.com`)"
+      - "traefik.http.routers.medusa-store-http.entrypoints=web"
+      - "traefik.http.routers.medusa-store-http.middlewares=redirect-to-https@file"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  traefik-net:
+    external: true

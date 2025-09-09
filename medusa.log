@@ -1,0 +1,11 @@
+Starting Medusa server...
+⚠️  WARNING: Missing recommended environment variables:
+   - REDIS_URL
+   - AWS_ACCESS_KEY_ID
+   - SENDGRID_API_KEY
+Some features may not work optimally without these variables.
+✅ Production configuration validated successfully
+Failed to start Medusa server: TypeError: Cannot read properties of undefined (reading '@medusajs/medusa/link-modules')
+    at MedusaApp_ (/home/arthur/medusa/packages/core/modules-sdk/dist/medusa-app.js:197:31)
+    at async MedusaApp (/home/arthur/medusa/packages/core/modules-sdk/dist/medusa-app.js:372:12)
+    at async bootstrap (/home/arthur/medusa/app.js:7:31)

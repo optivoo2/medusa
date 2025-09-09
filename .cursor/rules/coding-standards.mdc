@@ -1,0 +1,109 @@
+---
+globs: *.js,*.ts,*.tsx
+description: Coding standards and ESLint configuration for Medusa project
+---
+
+# Coding Standards & ESLint Rules
+
+This project follows strict coding standards enforced by ESLint. Always adhere to these rules when writing or modifying code.
+
+## Code Style Rules
+
+### JavaScript/TypeScript Standards
+- **No Semicolons**: Never use semicolons (`;`) - enforced by ESLint
+- **Double Quotes**: Always use double quotes for strings, allow template literals
+- **Trailing Commas**: Always use trailing commas in multiline arrays, objects, imports, exports
+- **Curly Braces**: Always use curly braces for all control structures (`if`, `for`, `while`, etc.)
+- **Line Length**: Maximum 80 characters per line (ignores strings, regex, comments, URLs, template literals)
+- **Object Spacing**: Always use spaces inside curly braces: `{ key: value }`
+- **Arrow Functions**: Always use parentheses around arrow function parameters: `(param) => {}`
+- **Function Spacing**: 
+  - Anonymous functions: `function () {}`
+  - Named functions: `function name() {}`
+  - Async arrows: `async () => {}`
+
+### TypeScript Specific Rules
+- **Floating Promises**: Always handle promises properly - use `await` or `.catch()`
+- **Await Thenable**: Only await thenable values
+- **Promise Functions**: Promise-returning functions must be async
+- **Keyword Spacing**: Proper spacing around TypeScript keywords
+- **No Unused Variables**: Remove unused variables (args can be prefixed with `_`)
+
+### React/JSX Rules (for UI packages)
+- **Prop Types**: Disabled in favor of TypeScript
+- **React Hooks**: Follow exhaustive-deps rule for useEffect dependencies
+- **Unused Imports**: Automatically remove unused imports
+- **React Refresh**: Only export components in files with React Refresh
+
+## File Organization
+
+### Import Order
+1. Node modules
+2. Internal packages (from `@medusajs/`)
+3. Relative imports
+4. Type-only imports (use `import type`)
+
+### Export Patterns
+- Use named exports over default exports when possible
+- Group related exports together
+- Use `export type` for type-only exports
+
+## Error Handling
+
+### Async/Await Pattern
+```typescript
+// ✅ Correct
+try {
+  const result = await someAsyncOperation()
+  return result
+} catch (error) {
+  console.error("Operation failed:", error)
+  throw error
+}
+
+// ❌ Incorrect - floating promise
+someAsyncOperation() // Missing await or .catch()
+```
+
+### Promise Handling
+```typescript
+// ✅ Correct
+const result = await promiseReturningFunction()
+
+// ✅ Also correct
+promiseReturningFunction().catch(console.error)
+
+// ❌ Incorrect
+promiseReturningFunction() // Floating promise
+```
+
+## Code Quality
+
+### Variable Naming
+- Use camelCase for variables and functions
+- Use PascalCase for classes and types
+- Prefix unused parameters with `_`: `function handler(_unusedParam) {}`
+
+### Function Definitions
+- Always specify return types for public functions
+- Use async/await over Promise chains
+- Handle errors appropriately
+
+### Comments and Documentation
+- Use JSDoc for public APIs
+- Keep comments concise and relevant
+- Update comments when code changes
+
+## Linting Commands
+
+- `yarn lint` - Lint entire codebase
+- `yarn lint:path <path>` - Lint specific file or directory
+- `yarn prettier` - Format code with Prettier
+
+## Pre-commit Hooks
+
+The project uses `lint-staged` to automatically:
+- Run ESLint on JavaScript/TypeScript files
+- Format Markdown and YAML files with Prettier
+
+Always ensure your code passes linting before committing.
