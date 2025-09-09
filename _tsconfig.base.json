@@ -2,7 +2,7 @@
   "compilerOptions": {
     "lib": ["ES2021", "DOM"],
     "target": "ES2021",
-    "outDir": "${configDir}/dist",
+    "outDir": "./dist",
     "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
@@ -22,6 +22,6 @@
     "skipLibCheck": true,
     "incremental": false
   },
-  "include": ["${configDir}/src"],
-  "exclude": ["${configDir}/dist", "${configDir}/node_modules"]
+  "include": ["./src"],
+  "exclude": ["./dist", "./node_modules"]
 }
