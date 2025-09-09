@@ -2,15 +2,19 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install --legacy-peer-deps && echo 'Dependencies installed successfully'"
+    "buildCommand": "npm install --legacy-peer-deps --production=false && npm run build"
   },
   "deploy": {
-    "startCommand": "node simple-server.js",
+    "startCommand": "npm run deploy:production",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
     "healthcheckPath": "/health",
-    "healthcheckTimeout": 30
+    "healthcheckTimeout": 60
+  },
+  "environment": {
+    "NODE_ENV": "production",
+    "NODE_OPTIONS": "--max-old-space-size=4096"
   }
 }

@@ -18,7 +18,9 @@ async function bootstrap() {
     const appConfig = {
       databaseUrl: DB_URL,
       modules: {
-        [Modules.AUTH]: true,
+        [Modules.AUTH]: {
+          resolve: "@medusajs/auth",
+        },
         [Modules.USER]: {
           scope: "internal",
           resolve: "@medusajs/user",
@@ -52,13 +54,27 @@ async function bootstrap() {
         } : {
           resolve: "@medusajs/workflow-engine-inmemory",
         },
-        [Modules.CUSTOMER]: true,
-        [Modules.PRODUCT]: true,
-        [Modules.PRICING]: true,
-        [Modules.PROMOTION]: true,
-        [Modules.SALES_CHANNEL]: true,
-        [Modules.CART]: true,
-        [Modules.ORDER]: true,
+        [Modules.CUSTOMER]: {
+          resolve: "@medusajs/customer",
+        },
+        [Modules.PRODUCT]: {
+          resolve: "@medusajs/product",
+        },
+        [Modules.PRICING]: {
+          resolve: "@medusajs/pricing",
+        },
+        [Modules.PROMOTION]: {
+          resolve: "@medusajs/promotion",
+        },
+        [Modules.SALES_CHANNEL]: {
+          resolve: "@medusajs/sales-channel",
+        },
+        [Modules.CART]: {
+          resolve: "@medusajs/cart",
+        },
+        [Modules.ORDER]: {
+          resolve: "@medusajs/order",
+        },
         [Modules.PAYMENT]: {
           resolve: "@medusajs/payment",
           options: {
@@ -81,14 +97,26 @@ async function bootstrap() {
             ],
           },
         },
-        [Modules.STOCK_LOCATION]: true,
-        [Modules.INVENTORY]: true,
-        [Modules.TAX]: true,
-        [Modules.REGION]: true,
-        [Modules.STORE]: true,
-        [Modules.API_KEY]: true,
+        [Modules.STOCK_LOCATION]: {
+          resolve: "@medusajs/stock-location",
+        },
+        [Modules.INVENTORY]: {
+          resolve: "@medusajs/inventory",
+        },
+        [Modules.TAX]: {
+          resolve: "@medusajs/tax",
+        },
+        [Modules.REGION]: {
+          resolve: "@medusajs/region",
+        },
+        [Modules.STORE]: {
+          resolve: "@medusajs/store",
+        },
+        [Modules.API_KEY]: {
+          resolve: "@medusajs/api-key",
+        },
         [Modules.FILE]: {
-          resolve: "@medusajs/file-local",
+          resolve: "@medusajs/file",
           options: {
             providers: [
               {
