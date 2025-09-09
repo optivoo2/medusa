@@ -17,13 +17,16 @@ COPY .yarn ./.yarn
 # Install all dependencies (including dev dependencies for building)
 RUN yarn install
 
+# Install TypeScript and build tools globally for each package build
+RUN npm install -g typescript tsup rimraf
+
 # Add node_modules/.bin to PATH for build tools
 ENV PATH="/app/node_modules/.bin:$PATH"
 
 # Copy source code
 COPY . .
 
-# Build the application with explicit PATH
+# Build the application with global tools available
 RUN yarn build
 
 # Clean up dev dependencies to reduce image size
