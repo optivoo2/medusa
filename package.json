@@ -79,6 +79,7 @@
     "security:check": "node scripts/security-check.js",
     "setup:production": "./scripts/setup-production-env.sh",
     "prestart": "npm run security:check",
+    "start": "npm run deploy:railway",
     "start:dev": "NODE_ENV=development node dev-server.js",
     "start:prod": "NODE_ENV=production node app.js",
     "build:prod": "NODE_ENV=production yarn build",
