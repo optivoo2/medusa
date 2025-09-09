@@ -7,6 +7,9 @@ RUN apk add --no-cache python3 make g++
 # Enable Corepack for Yarn v3 support
 RUN corepack enable
 
+# Install global build tools that all packages need
+RUN npm install -g typescript@4.9.5 tsup@7.3.0 rimraf@5.0.7
+
 # Set working directory
 WORKDIR /app
 
@@ -17,8 +20,8 @@ COPY .yarn ./.yarn
 # Install all dependencies (including dev dependencies for building)
 RUN yarn install
 
-# Add node_modules/.bin to PATH for build tools
-ENV PATH="/app/node_modules/.bin:$PATH"
+# Add both global and local node_modules/.bin to PATH
+ENV PATH="/usr/local/lib/node_modules/.bin:/app/node_modules/.bin:$PATH"
 
 # Copy source code
 COPY . .
