@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "yarn install --frozen-lockfile && yarn build"
+buildCommand = "yarn install && yarn build"
 
 [deploy]
 startCommand = "npm run deploy:production"
