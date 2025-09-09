@@ -17,7 +17,7 @@ export interface StorageProvider {
 
   onApplicationStart?(): Promise<void>
 
-  query<const TEntry extends string>(
+  query<TEntry extends string>(
     config: IndexQueryConfig<TEntry>
   ): Promise<QueryResultSet<TEntry>>
 

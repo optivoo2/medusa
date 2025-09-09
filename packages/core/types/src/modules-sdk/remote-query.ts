@@ -36,7 +36,7 @@ export type GraphResultSet<TEntry extends string> = {
  * a normalized/consistent output.
  */
 export type QueryGraphFunction = {
-  <const TEntry extends string>(
+  <TEntry extends string>(
     queryConfig: RemoteQueryInput<TEntry>,
     options?: RemoteJoinerOptions
   ): Promise<Prettify<GraphResultSet<TEntry>>>
@@ -48,7 +48,7 @@ export type QueryGraphFunction = {
  * a normalized/consistent output.
  */
 export type QueryIndexFunction = {
-  <const TEntry extends string>(queryOptions: IndexQueryInput<TEntry>): Promise<
+  <TEntry extends string>(queryOptions: IndexQueryInput<TEntry>): Promise<
     Prettify<QueryResultSet<TEntry>>
   >
 }
@@ -90,7 +90,7 @@ export interface RemoteQueryFunction {
    * @param queryConfig
    * @param options
    */
-  <const TEntry extends string>(
+  <TEntry extends string>(
     queryConfig: RemoteQueryObjectConfig<TEntry>,
     options?: RemoteJoinerOptions
   ): Promise<any>
@@ -100,7 +100,7 @@ export interface RemoteQueryFunction {
    * @param queryConfig
    * @param options
    */
-  <const TConfig extends RemoteQueryObjectFromStringResult<any>>(
+  <TConfig extends RemoteQueryObjectFromStringResult<any>>(
     queryConfig: TConfig,
     options?: RemoteJoinerOptions
   ): Promise<any>
@@ -143,7 +143,7 @@ export interface Query {
    * @param queryConfig
    * @param options
    */
-  query<const TEntry extends string>(
+  query<TEntry extends string>(
     queryConfig: RemoteQueryObjectConfig<TEntry>,
     options?: RemoteJoinerOptions
   ): Promise<any>
@@ -153,7 +153,7 @@ export interface Query {
    * @param queryConfig
    * @param options
    */
-  query<const TConfig extends RemoteQueryObjectFromStringResult<any>>(
+  query<TConfig extends RemoteQueryObjectFromStringResult<any>>(
     queryConfig: TConfig,
     options?: RemoteJoinerOptions
   ): Promise<any>

@@ -14,7 +14,7 @@ export interface IndexModuleOptions {
 }
 
 export interface IIndexService extends IModuleService {
-  query<const TEntry extends string>(
+  query<TEntry extends string>(
     config: IndexQueryConfig<TEntry>
   ): Promise<QueryResultSet<TEntry>>
 }
