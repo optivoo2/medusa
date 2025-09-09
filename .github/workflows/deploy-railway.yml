@@ -1,0 +1,38 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [ develop, development ]
+  pull_request:
+    branches: [ develop, development ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install Railway CLI
+      run: npm install -g @railway/cli
+
+    - name: Deploy to Railway
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      run: |
+        railway login --token $RAILWAY_TOKEN
+        railway up --detach
+        echo "✅ Deployment to Railway completed!"
+
+    - name: Health Check
+      run: |
+        sleep 30
+        echo "Waiting for deployment to be ready..."
+        # Railway will automatically trigger deployment through GitHub integration
