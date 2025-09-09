@@ -1,5 +1,3 @@
-const { Modules } = require("@medusajs/utils")
-
 // Environment detection
 const isProduction = process.env.NODE_ENV === "production"
 const isDevelopment = process.env.NODE_ENV === "development" || !process.env.NODE_ENV
@@ -21,7 +19,7 @@ const getCorsOrigins = () => {
 
 module.exports = {
   admin: {
-    disable: false, // Enable admin dashboard
+    disable: true, // Disable admin dashboard for now
     path: "/app",
   },
   plugins: [],
@@ -64,89 +62,14 @@ module.exports = {
         ],
       },
     },
-  },
-  featureFlags: {
-    medusa_v2: true, // Enable Medusa v2 features
-  },
-  modules: {
-    [Modules.AUTH]: true,
-    [Modules.USER]: {
-      scope: "internal",
-      resolve: "@medusajs/user",
-      options: {
-        jwt_secret: process.env.JWT_SECRET,
+    // Enhanced Redis configuration for production
+    redisUrl: REDIS_URL,
+    // File storage configuration - Local only
+    fileService: {
+      provider: "local",
+      local: {
+        upload_dir: "uploads",
       },
-    },
-    // CRITICAL FIX: Production-ready caching
-    [Modules.CACHE]: isProduction && REDIS_URL ? {
-      resolve: "@medusajs/cache-redis",
-      options: { 
-        redisUrl: REDIS_URL,
-        ttl: 3600, // 1 hour default TTL
-      },
-    } : {
-      resolve: "@medusajs/cache-inmemory",
-      options: { ttl: isDevelopment ? 0 : 300 }, // Disabled for dev, 5min for others
-    },
-    // Enhanced workflow engine for production
-    [Modules.WORKFLOW_ENGINE]: isProduction && REDIS_URL ? {
-      resolve: "@medusajs/workflow-engine-redis",
-      options: {
-        redis: { url: REDIS_URL },
-      },
-    } : {
-      resolve: "@medusajs/workflow-engine-inmemory",
-    },
-    [Modules.STOCK_LOCATION]: {
-      resolve: "@medusajs/stock-location",
-      options: {},
-    },
-    [Modules.INVENTORY]: {
-      resolve: "@medusajs/inventory",
-      options: {},
-    },
-    // CRITICAL FIX: Production-ready file storage
-    [Modules.FILE]: {
-      resolve: "@medusajs/file",
-    },
-    [Modules.PRODUCT]: true,
-    [Modules.PRICING]: true,
-    [Modules.PROMOTION]: true,
-    [Modules.REGION]: true,
-    [Modules.CUSTOMER]: true,
-    [Modules.SALES_CHANNEL]: true,
-    [Modules.CART]: true,
-    [Modules.API_KEY]: true,
-    [Modules.STORE]: true,
-    [Modules.TAX]: true,
-    [Modules.CURRENCY]: true,
-    [Modules.ORDER]: true,
-    [Modules.PAYMENT]: {
-      resolve: "@medusajs/payment",
-      options: {
-        providers: [
-          {
-            resolve: "@medusajs/payment/dist/providers/system",
-            id: "system",
-          },
-        ],
-      },
-    },
-    [Modules.FULFILLMENT]: {
-      resolve: "@medusajs/fulfillment",
-    },
-    // Enhanced notification system
-    [Modules.NOTIFICATION]: {
-      resolve: "@medusajs/notification",
-    },
-    // Add event bus configuration for better performance
-    [Modules.EVENT_BUS]: isProduction && REDIS_URL ? {
-      resolve: "@medusajs/event-bus-redis",
-      options: {
-        redisUrl: REDIS_URL,
-      },
-    } : {
-      resolve: "@medusajs/event-bus-local",
     },
   },
 }
@@ -171,7 +94,7 @@ if (isProduction) {
   }
   
   // Warn about optional but recommended variables
-  const recommendedVars = ['REDIS_URL', 'AWS_ACCESS_KEY_ID', 'SENDGRID_API_KEY']
+  const recommendedVars = ['REDIS_URL']
   const missingRecommended = recommendedVars.filter(varName => !process.env[varName])
   
   if (missingRecommended.length > 0) {
@@ -184,4 +107,3 @@ if (isProduction) {
   
   console.log('✅ Production configuration validated successfully')
 }
-
