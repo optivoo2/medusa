@@ -1,6 +1,5 @@
 [build]
-builder = "nixpacks"
-buildCommand = "yarn install && yarn build"
+builder = "dockerfile"
 
 [deploy]
 startCommand = "npm run deploy:production"
